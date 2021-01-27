@@ -12,15 +12,13 @@ function calculateResults(incomingData) {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const pointsPerTransaction = incomingData.map(transaction=> {
     let points = 0;
-    let over100 = transaction.amt - 100;
-    
-    if (over100 > 0) {
-      // A customer receives 2 points for every dollar spent over $100 in each transaction      
-      points += (over100 * 2);
-    }    
-    if (transaction.amt > 50) {
-      // plus 1 point for every dollar spent over $50 in each transaction
-      points += 50;      
+    const price = transaction.amt;
+    if (price >=50 && price < 100) {
+      points += price-50;
+    } else if (price >100){
+      points += (2*(price-100) + 50);
+    } else {
+      points += 0;
     }
     const month = new Date(transaction.transactionDt).getMonth();
     return {...transaction, points, month};
@@ -43,7 +41,6 @@ function calculateResults(incomingData) {
       byCustomer[custid][month].numTransactions++;      
     }
     else {
-      
       byCustomer[custid][month] = {
         custid,
         name,
@@ -54,25 +51,31 @@ function calculateResults(incomingData) {
       }
     }    
   });
+
   let tot = [];
   for (var custKey in byCustomer) {    
     byCustomer[custKey].forEach(cRow=> {
       tot.push(cRow);
-    });    
-    //console.log("byCustomer", byCustomer);
+    });
   }
-  //console.log("tot", tot);
-  let totByCustomer = [];
-  for (custKey in totalPointsByCustomer) {    
-    totByCustomer.push({
-      name: custKey,
-      points: totalPointsByCustomer[custKey]
-    });    
-  }
+
+  let data = [];
+  tot.map(obj => {
+    console.log(obj)
+    const index = data.findIndex(d => d.name === obj.name);
+    if(index > -1){
+      data[index].points += obj.points;
+    } else {
+      data.push({
+        name: obj.name,
+        points: obj.points
+      })
+    }
+  })
   return {
     summaryByCustomer: tot,
     pointsPerTransaction,
-    totalPointsByCustomer:totByCustomer
+    totalPointsByCustomer:data
   };
 }
 
