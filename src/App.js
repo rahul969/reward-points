@@ -1,7 +1,4 @@
 import React, { useState, useEffect } from "react";
-import _ from 'lodash';
-import ReactTable from 'react-table';
-import './react-table.css'
 import getData from './api/dataService';
 import "./App.css";
 
@@ -61,7 +58,6 @@ function calculateResults(incomingData) {
 
   let data = [];
   tot.map(obj => {
-    console.log(obj)
     const index = data.findIndex(d => d.name === obj.name);
     if(index > -1){
       data[index].points += obj.points;
@@ -71,6 +67,7 @@ function calculateResults(incomingData) {
         points: obj.points
       })
     }
+    return 0;
   })
   return {
     summaryByCustomer: tot,
@@ -81,47 +78,10 @@ function calculateResults(incomingData) {
 
 const App = () => {
   const [transactionData, setTransactionData] = useState([]);
-  
-  const columns = [
-    {
-      Header:'Customer',
-      accessor: 'name'      
-    },    
-    {
-      Header:'Month',
-      accessor: 'month'
-    },
-    {
-      Header: "# of Transactions",
-      accessor: 'numTransactions'
-    },
-    {
-      Header:'Reward Points',
-      accessor: 'points'
-    }
-  ];
-  const totalsByColumns = [
-    {
-      Header:'Customer',
-      accessor: 'name'      
-    },    
-    {
-      Header:'Points',
-      accessor: 'points'
-    }
-  ]
-
-  function getIndividualTransactions(row) {
-    let byCustMonth = _.filter(transactionData.pointsPerTransaction, (tRow)=>{    
-      return row.original.custid === tRow.custid && row.original.monthNumber === tRow.month;
-    });
-    return byCustMonth;
-  }
 
   useEffect(() => { 
     getData().then((data)=> {             
       const results = calculateResults(data);   
-      console.log(results);   
       setTransactionData(results);
     });
   },[]);
@@ -129,7 +89,6 @@ const App = () => {
   if (transactionData.length === 0) {
     return <div>Loading...</div>;   
   }
-
   return  <div>       
       <div className="container">
         <div className="row">
@@ -139,28 +98,24 @@ const App = () => {
         </div>
         <div className="row">
           <div className="col-8">
-            <ReactTable
-              data={transactionData.summaryByCustomer}
-              defaultPageSize={5}
-              columns={columns}
-              SubComponent={row => {
-                return (
-                  <div>
-                    
-                      {getIndividualTransactions(row).map(tran=>{
-                        return <div className="container">
-                          <div className="row">
-                            <div className="col-8">
-                              <strong>Transaction Date:</strong> {tran.transactionDt} - <strong>$</strong>{tran.amt} - <strong>Points: </strong>{tran.points}
-                            </div>
-                          </div>
-                        </div>
-                      })}                                    
-
-                  </div>
-                )
-              }}
-              />             
+          <table className="table">
+            <thead>
+              <tr>
+                <th scope="col">Customer</th>
+                <th scope="col">Month</th>
+                <th scope="col"># of Transactions</th>
+                <th scope="col">Reward Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactionData.summaryByCustomer.map((obj,index)=> <tr key={index}>
+                <th scope="row">{obj.name}</th>
+                <td>{obj.month}</td>
+                <td>{obj.numTransactions}</td>
+                <td>{obj.points}</td>
+              </tr>)}
+            </tbody>
+          </table>      
             </div>
           </div>
         </div>
@@ -173,11 +128,20 @@ const App = () => {
           </div>      
           <div className="row">
             <div className="col-8">
-              <ReactTable
-                data={transactionData.totalPointsByCustomer}
-                columns={totalsByColumns}
-                defaultPageSize={5}                
-              />
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Customer</th>
+                    <th scope="col">Total Reward Points</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactionData.totalPointsByCustomer.map((obj,index)=> <tr key={index}>
+                    <th scope="row">{obj.name}</th>
+                    <td>{obj.points}</td>
+                  </tr>)}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>      
